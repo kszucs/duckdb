@@ -212,6 +212,8 @@ public:
 	void PrepareRowGroup(ColumnDataCollection &buffer, PreparedRowGroup &result,
 	                     unique_ptr<ParquetWriteTransformData> &transform_data);
 	void FlushRowGroup(PreparedRowGroup &row_group);
+	//! Prepares and writes a row group. The copy operators call flush_batch one at a time per file, in file order,
+	//! which content-defined chunking relies on: its chunkers carry state from one row group to the next
 	void Flush(ColumnDataCollection &buffer, unique_ptr<ParquetWriteTransformData> &transform_data);
 	void Finalize();
 
@@ -335,9 +337,6 @@ private:
 	std::shared_ptr<duckdb_apache::thrift::protocol::TProtocol> protocol;
 	duckdb_parquet::FileMetaData file_meta_data;
 	std::mutex lock;
-	//! With content-defined chunking, held while a row group is prepared and written, so the chunker sees row groups
-	//! one at a time and in file order
-	std::mutex cdc_lock;
 
 	vector<unique_ptr<ColumnWriter>> column_writers;
 
